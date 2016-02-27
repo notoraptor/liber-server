@@ -1,0 +1,7 @@
+Array
+(
+    [spacing] => -1
+    [minSize] => 20
+    [maxSize] => 28
+    [font] => VeraSansBold.ttf
+)
