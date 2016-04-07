@@ -3,6 +3,8 @@ class RequestException extends Exception {
 	public function __construct($errorCode) {
 		parent::__construct($errorCode);
 	}
+	static public function REQUEST_ERROR_FORMAT          (){return new RequestException('REQUEST_ERROR_FORMAT');}
+	static public function REQUEST_ERROR_NO_ENCRYPTED    (){return new RequestException('REQUEST_ERROR_NO_ENCRYPTED');}
 	static public function REQUEST_ERROR_NAME_MISSING    (){return new RequestException('REQUEST_ERROR_NAME_MISSING');}
 	static public function REQUEST_ERROR_NO_REQUEST      (){return new RequestException('REQUEST_ERROR_NO_REQUEST');}
 	static public function REQUEST_ERROR_UNKNOWN_REQUEST (){return new RequestException('REQUEST_ERROR_UNKNOWN_REQUEST');}
@@ -51,6 +53,7 @@ class Response {
 	static public function ERROR_CAPTCHA_IMAGE             () {return new Response('ERROR_CAPTCHA_IMAGE');        }
 	static public function ERROR_DELETION                  () {return new Response('ERROR_DELETION');             }
 	static public function ERROR_MESSAGE                   () {return new Response('ERROR_MESSAGE');              }
+	static public function ERROR_BODY                      () {return new Response('ERROR_BODY');              }
 	static public function ERROR_MESSAGE_NOT_FOUND         () {return new Response('ERROR_MESSAGE_NOT_FOUND');    }
 	static public function ERROR_MICROTIME                 () {return new Response('ERROR_MICROTIME');            }
 	static public function ERROR_MICROTIME_DUPLICATED      () {return new Response('ERROR_MICROTIME_DUPLICATED'); }
@@ -64,7 +67,10 @@ class Response {
 	static public function ERROR_USERNAME                  () {return new Response('ERROR_USERNAME');             }
 	static public function ERROR_USERNAME_TAKEN            () {return new Response('ERROR_USERNAME_TAKEN');       }
 	static public function ERROR_VALIDATION                () {return new Response('ERROR_VALIDATION');           }
+	static public function ERROR_KEY                       () {return new Response('ERROR_KEY');           }
+	static public function NO_KEY                          () {return new Response('NO_KEY');                 }
 	static public function NO_MESSAGE                      () {return new Response('NO_MESSAGE');                 }
+	static public function NO_POSTED                       () {return new Response('NO_POSTED');                 }
 	static public function fromException(RequestException $e) {return new Response($e->getMessage());}
 }
 ?>

@@ -140,6 +140,18 @@ class GetServerPlaceRequest extends RequestFromCandidate {
 		return $response;
 	}
 }
+class GetPublicKeyRequest extends RequestFromCandidate {
+	public function get_needed() {
+		return array('username');
+	}
+	public function manage(LiberDB $db) {
+		$publicKey = $db->get_public_key($this->username);
+		if(!$publicKey) return Response::NO_KEY();
+		$response = Response::OK();
+		$response->add('publicKey', $publicKey);
+		return $response;
+	}
+}
 class CreateAccountRequest extends RequestFromCandidate {
 	public function get_needed() {
 		return array('username', 'password', 'publicIP', 'privateIP', 'publicPort', 'privatePort');
@@ -269,59 +281,72 @@ class CaptchaForDeletionRequest extends RequestFromAccount {
 		return Response::OK();
 	}
 }
+class NextPostedMessageReceivedRequest extends RequestFromAccount {
+	public function manageAccount(LiberDB $db) {
+		$db->delete_next_posted_message($this->username, $this->password);
+		return Response::OK();
+	}
+}
+class GetNextPostedRequest extends RequestFromAccount {
+	public function manageAccount(LiberDB $db) {
+		$nextMessage = $db->get_next_posted($this->username, $this->password);
+		if($nextMessage == null) return Response::NO_POSTED();
+		$response = Response::OK();
+		$response->add('requestBody', $nextMessage['requestBody']);
+		return $response;
+	}
+}
 class GetNextPostedMessageRequest extends RequestFromAccount {
 	public function manageAccount(LiberDB $db) {
 		$nextMessage = $db->get_next_posted_message($this->username, $this->password);
 		if($nextMessage == null) return Response::NO_MESSAGE();
 		$response = Response::OK();
-		$response->add('sender', $nextMessage['sender']);
-		$response->add('microtime', $nextMessage['microtime']);
-		$response->add('message', $nextMessage['content']);
+		$response->add('requestBody', $nextMessage['requestBody']);
 		return $response;
 	}
 }
-class PostedMessageReceivedRequest extends RequestFromAccount {
+class NextPostedReceivedRequest extends RequestFromAccount {
+	public function manageAccount(LiberDB $db) {
+		$db->delete_next_posted($this->username, $this->password);
+		return Response::OK();
+	}
+}
+class SetPublicKeyRequest extends RequestFromAccount {
 	public function get_needed() {
-		return array('author', 'microtime');
+		return array('publicKey');
 	}
 	public function manageAccount(LiberDB $db) {
-		if(!utils_check_url($this->author))
-			return Response::ERROR_AUTHOR_FORMAT();
-		if(!utils_check_number_string($this->microtime))
-			return Response::ERROR_MICROTIME_FORMAT();
-		$deleted = $db->delete_posted_message($this->username, $this->password, $this->author, $this->microtime);
-		return $deleted ? Response::OK() : Response::ERROR_MESSAGE_NOT_FOUND();
+		$ok = $db->set_public_key($this->username, $this->password, $this->publicKey);
+		return $ok ? Response::OK() : Response::ERROR_KEY();
 	}
 }
 // Requête d'une liberadresse en genéral.
+class PostLaterRequest extends RequestFromLiberaddress {
+	public function get_needed() {
+		return array('username', 'body');
+	}
+	public function manage(LiberDB $db) {
+		if(!$db->username_exists($this->username))
+			return Response::ERROR_USERNAME();
+		if($this->body == '')
+			return Response::ERROR_BODY();
+		$db->post_later($this->username, $this->body); // revoir
+		return Response::OK();
+	}
+}
 class PostMessageRequest extends RequestFromLiberaddress {
 	public function get_needed() {
-		return array('username', 'microtime', 'message');
+		return array('username', 'body');
 	}
 	public function manage(LiberDB $db) {
-		$account_id = $db->get_user_id($this->username);
-		if($account_id === false)
+		if(!$db->username_exists($this->username))
 			return Response::ERROR_USERNAME();
-		if(!utils_check_number_string($this->microtime))
-			return Response::ERROR_MICROTIME();
-		if($this->message == '')
-			return Response::ERROR_MESSAGE();
-		$posted = $db->post_message($this->sender, $account_id, $this->microtime, $this->message);
-		return $posted ? Response::OK() : Response::ERROR_MICROTIME_DUPLICATED();
+		if($this->body == '')
+			return Response::ERROR_BODY();
+		$db->post_message($this->username, $this->body); // revoir
+		return Response::OK();
 	}
 }
-class CheckPostedMessageRequest extends RequestFromLiberaddress {
-	public function get_needed() {
-		return array('username', 'microtime');
-	}
-	public function manage(LiberDB $db) {
-		$account_id = $db->get_user_id($this->username);
-		if($account_id === false)
-			return Response::ERROR_USERNAME();
-		if(!utils_check_number_string($this->microtime))
-			return Response::ERROR_MICROTIME();
-		$posted = $db->check_posted_message($this->sender, $account_id, $this->microtime);
-		return $posted ? Response::OK() : Response::NO_MESSAGE();
-	}
-}
+// CheckPostedMessage
+
 ?>
